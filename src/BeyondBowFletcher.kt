@@ -11,7 +11,7 @@ import java.awt.Font
 import java.awt.Graphics
 
 @Suppress("NAME_SHADOWING")
-@ScriptManifest(authors = ["IM4EVER12C", "Powa"], category = "Fletching", name = "Beyond Bows")
+@ScriptManifest(authors = ["IM4EVER12C", "Powa"], category = "Fletching", name = "Beyond Bows 2.0")
 class BeyondBowFletcher : Script(), Painting {
     private val startTime = System.currentTimeMillis()
     private var fletchingLevelBefore = 0
@@ -20,39 +20,9 @@ class BeyondBowFletcher : Script(), Painting {
     private var logCounter = 0
     private var afkTicks = 0
     private var maxAFKTicks = 25
-    private var temp: String = null.toString()
-    private var tempMod: String = null.toString()
     private val fletchingLvl = Skills.getActualLevel(SKILLS.FLETCHING)
-    private val log = arrayOf("Logs", "Oak Logs", "Willow logs", "Maple logs", "Yew logs", "Magic Logs")
-
-    companion object FletchingLvlCheck {
-        var returnLogLvl = LogType.values().associateBy(LogType::loglvl)
-        fun fromInt(type: Int) = returnLogLvl
-    }
-
-    private enum class BowToFletch {
-        ARROW_SHAFT,
-        LONGBOW,
-        OAK_SHORTBOW,
-        OAK_LONGBOW,
-        WILLOW_SHORTBOW,
-        WILLOW_LONGBOW,
-        MAPLE_SHORTBOW,
-        MAPLE_LONGBOW,
-        YEW_SHORTBOW,
-        YEW_LONGBOW,
-        MAGIC_SHORTBOW,
-        MAGIC_LONGBOW;
-    }
-    private var bowTypeLvl = arrayOf(
-            Pair(85, 99),
-            Pair(70, 79),
-            Pair(50, 69),
-            Pair(35, 49),
-            Pair(25, 29),
-            Pair(1, 19)
-    )
-    private enum class var bow = arrayOf("shortbow", "longbow", "arrow shafts")
+    private val log: MutableMap<IntRange, String> = mutableMapOf(0..19 to "Logs", 20..34 to "Oak Logs", 35..49 to "Willow logs", 50..69 to "Maple logs", 70..84 to "Yew logs", 85..99 to "Magic Logs").withDefault { "Logs" }
+    private val bow: MutableMap<IntRange, String> = mutableMapOf(0..9 to "Arrow shafts", 10..19 to "Longbow", 20..24 to "Oak shortbow", 25..34 to "Oak longbow", 35..39 to "Willow shortbow", 40..49 to "Willow longbow", 50..54 to "Maple shortbow", 55..69 to "Maple longbow", 70..84 to "Yew longbow", 85..99 to "Magic longbow").withDefault { "Arrow shaft" }
 
     override fun onPaint(g: Graphics) {
         val timeRan = System.currentTimeMillis() - startTime
@@ -69,7 +39,7 @@ class BeyondBowFletcher : Script(), Painting {
         g.font = Font("Calibri", Font.BOLD, 19)
         g.color = Color.yellow
         g.drawString("| Bows Fletched: $amountCut", 10, 300)
-        g.drawString("| Current Cut: " + currentCut(), 10, 315)
+        g.drawString("| Current Cut: " + bowType(), 10, 315)
         g.drawString("| Fletching Level: " + SKILLS.FLETCHING.actualLevel + " ("
                 + (SKILLS.FLETCHING.actualLevel - fletchingLevelBefore) + ")", 10, 330)
         g.drawString("| Experience Gained: " + gainedXp(), 245, 300)
@@ -85,25 +55,7 @@ class BeyondBowFletcher : Script(), Painting {
         while (afkTicks < maxAFKTicks)  {
             sleep(fletch())
         }
-    }
-
-    private fun currentCut(): String {
-        if (logType() === log[0]) {
-            temp = bowType()
-        } else if (logType().toLowerCase().contains("logs")
-                && bowType() != bow[2]) {
-            tempMod = logType()
-            temp = tempMod.replace("logs", "") + " " + bowType()
-        } else if (bowType().toLowerCase().contains("arrow shafts")) {
-            temp = "arrow shafts"
-        } else {
-            temp = logType() + bowType()
-        }
-        return if (!temp.contains("arrow shafts")) {
-            "$temp (u)"
-        } else {
-            temp
-        }
+        errorMessage()
     }
 
     private fun getTotalFletched() {
@@ -123,38 +75,13 @@ class BeyondBowFletcher : Script(), Painting {
         return SKILLS.FLETCHING.xp - fletchingExpBefore
     }
 
-    private fun bowType(): String {
-        val z: Int = fletchingLvl
-        val flc = enumValues<LogType>()
-        var dfl = 0
-        if (FletchingLvlCheck.returnLogLvl.contains(z)) {
-            return LogType.toString()
-        }
-
-
+    private fun logType(test: Boolean = log.containsKey(fletchingLvl)): String {
+        return log.get(fletchingLvl).toString()
     }
 
-    private fun logType(): String {
-        if (fletchingLvl < 10) {
-            return log[0]
-        } else {
-            for (n in logLvl[0]) if (n.equals(fletchingLvl)) {
-                return log[1]
-            } else {
-                for (n in logLvl[1]) if (n.equals(fletchingLvl)) {
-                    return log[2]
-                } else {
-                    for (n in logLvl[3]) if (n.equals(fletchingLvl)) {
-                        return log[4]
-                    } else {
-                        for (n in logLvl[4]) if (n.equals(fletchingLvl)) {
-                            break
-                        }
-                    }
-                }
-            }
-        }
-        return log[5]
+
+    private fun bowType(test: Boolean = bow.containsKey(fletchingLvl)): String {
+        return bow.get(fletchingLvl).toString()
     }
 
     private fun bankProcess() {
@@ -224,18 +151,22 @@ class BeyondBowFletcher : Script(), Painting {
             bankProcess()
         }
     }
-    /*   private fun errorMessage() {
-           if (Inventory.getCount(logType()) < 1) {
-               println("No logs to fletch. Stopping script.")
-           } else if (Inventory.getCount("Knife") < 1) {
-               println("No knife found. Stopping script.")
-           }
-           else if (afkTicks == maxAFKTicks) {
-               println("Max AFK time reached. Stopping script.");
-           }
+
+    private fun errorMessage() {
+        when {
+            Inventory.getCount(logType()) < 1 -> {
+                println("No logs to fletch. Stopping script.")
+            }
+            Inventory.getCount("Knife") < 1 -> {
+                println("No knife found. Stopping script.")
+            }
+            afkTicks == maxAFKTicks -> {
+                println("Max AFK time reached. Stopping script.")
+            }
+        }
 
        }
-   */
+
     private fun fletch(): Long {
         getTotalFletched()
         cutting()
