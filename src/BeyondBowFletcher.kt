@@ -5,9 +5,11 @@ import org.tribot.api2007.*
 import org.tribot.api2007.Interfaces
 import org.tribot.api2007.Inventory
 import org.tribot.api2007.Skills.SKILLS
+
 import org.tribot.script.Script
 import org.tribot.script.ScriptManifest
 import org.tribot.script.interfaces.Painting
+
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
@@ -16,6 +18,7 @@ import java.lang.Math.random
 @Suppress("NAME_SHADOWING")
 @ScriptManifest(authors = ["IM4EVER12C", "Powa"], category = "Fletching", name = "Beyond Bow Fletcher")
 class BeyondBowFletcher : Script(), Painting {
+    private var shouldRun = true
     private val startTime = System.currentTimeMillis()
     private var fletchingLevelBefore = 0
     private var fletchingExpBefore = 0
@@ -23,14 +26,12 @@ class BeyondBowFletcher : Script(), Painting {
     private var logCounter = 0
     private val knife = "Knife"
     private val knifeA = "Knife ->"
-    private var afkTicks = 0
-    private val maxAfkTicks = 3
     private var hasClickedLogs : Boolean = false
     private var hasClickedKnife :Boolean = false
     private var rnds = (850..1337)
     private var rand = rnds.random().toLong()
     private val fLvl = Skills.getActualLevel(SKILLS.FLETCHING)
-    private val log = arrayOf(
+    private var log = arrayOf(
             "Logs",
             "Oak Logs",
             "Willow logs",
@@ -80,7 +81,7 @@ class BeyondBowFletcher : Script(), Painting {
         if (fletchingLevelBefore < 1) {
             fletchingLevelBefore = SKILLS.FLETCHING.actualLevel
         }
-        while (afkTicks < maxAfkTicks) {
+        while (shouldRun) {
             sleep(fletch())
         }
         errorMessage()
@@ -176,6 +177,7 @@ class BeyondBowFletcher : Script(), Painting {
             println("Made it to line 164")
             val myLogType = Inventory.find(logType())
             println("Made it to line 166")
+            println(Player.getAnimation().toString())
             if (Player.getAnimation() == -1) {
                 if (!hasClickedKnife) {
                     if (knifeA !in Game.getUptext()) {
@@ -222,22 +224,26 @@ class BeyondBowFletcher : Script(), Painting {
     }
 
     private fun errorMessage() {
-        if (Inventory.getCount(logType()) < 1) {
-            println(logType() + " " + bowType())
-            println("No logs to fletch. Stopping script.")
-        }
-        else if (Inventory.getCount(knife) < 1) {
-            println("No knife found. Stopping script.")
-        }
-        else {
-            println("Unknown Error: check highest line number")
+        shouldRun = when {
+            Inventory.getCount(logType()) < 1 -> {
+                println(logType() + " " + bowType())
+                println("No logs to fletch. Stopping script.")
+                false
+            }
+            Inventory.getCount(knife) < 1 -> {
+                println("No knife found. Stopping script.")
+                false
+            }
+            else -> {
+                println("Unknown Error: check highest line number")
+                false
+            }
         }
     }
 
     private fun fletch(): Long {
         getTotalFletched()
         cutting()
-        afkTicks +=1
         return rand
     }
 }
