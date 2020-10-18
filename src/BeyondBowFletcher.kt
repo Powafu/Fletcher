@@ -2,6 +2,8 @@ package scripts
 
 import org.tribot.api.Timing
 import org.tribot.api2007.*
+import org.tribot.api2007.Interfaces
+import org.tribot.api2007.Inventory
 import org.tribot.api2007.Skills.SKILLS
 import org.tribot.script.Script
 import org.tribot.script.ScriptManifest
@@ -9,20 +11,46 @@ import org.tribot.script.interfaces.Painting
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
+import java.lang.Math.random
 
 @Suppress("NAME_SHADOWING")
-@ScriptManifest(authors = ["IM4EVER12C", "Powa"], category = "Fletching", name = "Beyond Bows 2.0")
+@ScriptManifest(authors = ["IM4EVER12C", "Powa"], category = "Fletching", name = "Beyond Bow Fletcher")
 class BeyondBowFletcher : Script(), Painting {
     private val startTime = System.currentTimeMillis()
     private var fletchingLevelBefore = 0
     private var fletchingExpBefore = 0
     private var amountCut = 0
     private var logCounter = 0
+    private val knife = "Knife"
+    private val knifeA = "Knife ->"
     private var afkTicks = 0
-    private var maxAFKTicks = 25
-    private val fletchingLvl = Skills.getActualLevel(SKILLS.FLETCHING)
-    private val log: MutableMap<IntRange, String> = mutableMapOf(0..19 to "Logs", 20..34 to "Oak Logs", 35..49 to "Willow logs", 50..69 to "Maple logs", 70..84 to "Yew logs", 85..99 to "Magic Logs").withDefault { "Logs" }
-    private val bow: MutableMap<IntRange, String> = mutableMapOf(0..9 to "Arrow shafts", 10..19 to "Longbow", 20..24 to "Oak shortbow", 25..34 to "Oak longbow", 35..39 to "Willow shortbow", 40..49 to "Willow longbow", 50..54 to "Maple shortbow", 55..69 to "Maple longbow", 70..84 to "Yew longbow", 85..99 to "Magic longbow").withDefault { "Arrow shaft" }
+    private val maxAfkTicks = 3
+    private var hasClickedLogs : Boolean = false
+    private var hasClickedKnife :Boolean = false
+    private var rnds = (850..1337)
+    private var rand = rnds.random().toLong()
+    private val fLvl = Skills.getActualLevel(SKILLS.FLETCHING)
+    private val log = arrayOf(
+            "Logs",
+            "Oak Logs",
+            "Willow logs",
+            "Maple logs",
+            "Yew logs",
+            "Magic logs"
+    )
+
+    private var bowToFletch = arrayListOf(
+            "Arrow shaft",
+            "Longbow",
+            "Oak shortbow",
+            "Oak longbow",
+            "Willow shortbow",
+            "Willow longbow",
+            "Maple shortbow",
+            "Maple longbow",
+            "Yew longbow",
+            "Magic longbow"
+    )
 
     override fun onPaint(g: Graphics) {
         val timeRan = System.currentTimeMillis() - startTime
@@ -52,11 +80,12 @@ class BeyondBowFletcher : Script(), Painting {
         if (fletchingLevelBefore < 1) {
             fletchingLevelBefore = SKILLS.FLETCHING.actualLevel
         }
-        while (afkTicks < maxAFKTicks)  {
+        while (afkTicks < maxAfkTicks) {
             sleep(fletch())
         }
         errorMessage()
     }
+
 
     private fun getTotalFletched() {
         if (logCounter == 0) {
@@ -75,51 +104,99 @@ class BeyondBowFletcher : Script(), Painting {
         return SKILLS.FLETCHING.xp - fletchingExpBefore
     }
 
-    private fun logType(test: Boolean = log.containsKey(fletchingLvl)): String {
-        return log.get(fletchingLvl).toString()
+    private fun bowType(): String {
+        println("Made it to line 101")
+        return when (fLvl) {
+            in 0..9 -> bowToFletch[0]
+            in 10..19 -> bowToFletch[1]
+            in 20..24 -> bowToFletch[2]
+            in 25..29 -> bowToFletch[3]
+            in 30..34 -> bowToFletch[4]
+            in 35..49 -> bowToFletch[5]
+            in 50..54 -> bowToFletch[6]
+            in 55..69 -> bowToFletch[7]
+            in 70..84 -> bowToFletch[8]
+            in 85..99 -> bowToFletch[9]
+            else -> "You're not in runescape anymore"
+        }
+
     }
 
-
-    private fun bowType(test: Boolean = bow.containsKey(fletchingLvl)): String {
-        return bow.get(fletchingLvl).toString()
+    private fun logType(): String {
+        println("Made it to line 119")
+        return when (fLvl) {
+            in 0..19 -> log[0]
+            in 20..29 -> log[1]
+            in 30..49 -> log[2]
+            in 50..69 -> log[3]
+            in 70..84 -> log[4]
+            in 84..99 -> log[5]
+            else -> "Kansas"
+        }
     }
 
     private fun bankProcess() {
+        println("Made it to line 132")
         if (Inventory.getCount(logType()) < 1) {
             if (!Banking.isBankLoaded()) {
                 Banking.openBankBanker()
+                println("Made it to line 136")
             } else {
-                Banking.depositAllExcept("Knife")
-                if (Inventory.getCount(logType()) < 1) {
+                Banking.depositAllExcept(knife)
+                if ((!hasClickedLogs) && (Inventory.getCount(logType())) < 1) {
+                    println("Made it to line 139")
                     Banking.withdraw(27, logType())
-                } else if (Inventory.getCount("Knife") < 1) {
-                    Banking.withdraw(1, "Knife")
+                    hasClickedLogs = true
+                    println("HasClickedLogs line 144 = ")
+                    println((hasClickedLogs))
+                }
+                else if ((!hasClickedKnife) && (Inventory.getCount(knife) < 1)) {
+                    println("Made it to line 148")
+                    Banking.withdraw(1, knife)
+                    hasClickedKnife = true
+                    println("HasClickedLogs line 144 = ")
+                    println(hasClickedKnife)
                 }
             }
-        } else {
-            if (Banking.isBankLoaded()) {
-                Banking.close()
-            }
+        }
+        else if (!Banking.isBankLoaded()){
+            println("Made it to line 151")
+            Banking.close()
         }
     }
 
     private fun cutting() {
-        if (Inventory.getCount(logType()) >= 1 && Inventory.getCount("Knife") >= 1) {
+        println("Made it to line 157")
+        if (Inventory.getCount(logType()) >= 1 && Inventory.getCount(knife) >= 1) {
             if (Banking.isBankLoaded()) {
+                println("Made it to line 160")
                 Banking.close()
             }
-            val myKnife = Inventory.find("Knife")
+            val myKnife = Inventory.find(knife)
+            println("Made it to line 164")
             val myLogType = Inventory.find(logType())
+            println("Made it to line 166")
             if (Player.getAnimation() == -1) {
-                if (!Game.getUptext().contains("Knife ->")) {
-                    myKnife[0].click("Use")
+                if (!hasClickedKnife) {
+                    if (knifeA !in Game.getUptext()) {
+                        myKnife[0].click("Use")
+                        println("Made it to line 171 - HasClickedKnife = ")
+                        hasClickedKnife = true
+                    }
                 }
-
-                if (Game.getUptext().contains("Knife ->")) {
-                    val nxt: Int
-                    val amt: Int = Inventory.getCount(logType())
-                    nxt = (Math.random() * (amt - 0)).toInt()
-                    myLogType[nxt].click()
+                if (!hasClickedLogs) {
+                    if (knifeA in Game.getUptext()) {
+                        println("Made it to line 179")
+                        val nxt: Int
+                        val amt: Int = Inventory.getCount(logType())
+                        nxt = (random() * (amt - 0)).toInt()
+                        println(amt)
+                        println(nxt)
+                        println(hasClickedLogs)
+                        myLogType[nxt].click()
+                        hasClickedLogs = true
+                        println(hasClickedLogs)
+                    }
                 }
                 if (Interfaces.isInterfaceValid(270) && Interfaces.isInterfaceSubstantiated(270, 16)) {
                     val rsInterfaceChildOption1 = Interfaces.get(270, 14)
@@ -127,51 +204,41 @@ class BeyondBowFletcher : Script(), Painting {
                     val rsInterfaceChildOption3 = Interfaces.get(270, 16)
                     val rsInterfaceChildOption4 = Interfaces.get(270, 17)
                     val rsInterfaceChildOption5 = Interfaces.get(270, 18)
+                    println("RSI")
                     when {
-                        rsInterfaceChildOption1.componentName.toLowerCase().contains(bowType()) -> {
-                            rsInterfaceChildOption1.click()
-                        }
-                        rsInterfaceChildOption2.componentName.toLowerCase().contains(bowType()) -> {
-                            rsInterfaceChildOption2.click()
-                        }
-                        rsInterfaceChildOption3.componentName.toLowerCase().contains(bowType()) -> {
-                            rsInterfaceChildOption3.click()
-                        }
-                        rsInterfaceChildOption4.componentName.toLowerCase().contains(bowType()) -> {
-                            rsInterfaceChildOption4.click()
-                        }
-                        rsInterfaceChildOption5.componentName.toLowerCase().contains(bowType()) -> {
-                            rsInterfaceChildOption5.click()
-                        }
+                        bowType() in rsInterfaceChildOption1.componentName -> rsInterfaceChildOption1.click()
+                        bowType() in rsInterfaceChildOption2.componentName -> rsInterfaceChildOption2.click()
+                        bowType() in rsInterfaceChildOption3.componentName -> rsInterfaceChildOption3.click()
+                        bowType() in rsInterfaceChildOption4.componentName -> rsInterfaceChildOption4.click()
+                        bowType() in rsInterfaceChildOption5.componentName -> rsInterfaceChildOption5.click()
+                        else -> print("L214" + errorMessage())
                     }
                     sleep(1000)
                 }
             }
-        } else {
-            bankProcess()
+        }    else {
+                bankProcess()
         }
     }
 
     private fun errorMessage() {
-        when {
-            Inventory.getCount(logType()) < 1 -> {
-                println("No logs to fletch. Stopping script.")
-            }
-            Inventory.getCount("Knife") < 1 -> {
-                println("No knife found. Stopping script.")
-            }
-            afkTicks == maxAFKTicks -> {
-                println("Max AFK time reached. Stopping script.")
-            }
+        if (Inventory.getCount(logType()) < 1) {
+            println(logType() + " " + bowType())
+            println("No logs to fletch. Stopping script.")
         }
-
-       }
+        else if (Inventory.getCount(knife) < 1) {
+            println("No knife found. Stopping script.")
+        }
+        else {
+            println("Unknown Error: check highest line number")
+        }
+    }
 
     private fun fletch(): Long {
         getTotalFletched()
         cutting()
-        afkTicks += 1
-        return 25
+        afkTicks +=1
+        return rand
     }
 }
 
