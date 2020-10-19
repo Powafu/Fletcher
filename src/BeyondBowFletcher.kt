@@ -5,18 +5,14 @@ import org.tribot.api2007.*
 import org.tribot.api2007.Interfaces
 import org.tribot.api2007.Inventory
 import org.tribot.api2007.Skills.SKILLS
-
 import org.tribot.script.Script
 import org.tribot.script.ScriptManifest
 import org.tribot.script.interfaces.Painting
-
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
 import java.lang.Math.random
-
-@Suppress("NAME_SHADOWING")
-@ScriptManifest(authors = ["IM4EVER12C", "Powa"], category = "Fletching", name = "Beyond Bow Fletcher")
+@ScriptManifest(authors = ["Powa", "IM4EVER12C"], category = "Fletching", name = "Powagressive Open Source Fletcher")
 class BeyondBowFletcher : Script(), Painting {
     private var shouldRun = true
     private val startTime = System.currentTimeMillis()
@@ -57,24 +53,21 @@ class BeyondBowFletcher : Script(), Painting {
         val timeRan = System.currentTimeMillis() - startTime
         val alpha = 127
         val alpha2 = 186
-        val myColour = Color(255, 25, 25, alpha)
+        val myColour = Color(150, 150, 150, alpha)
         val myColour2 = Color(1, 1, 125, alpha2)
         g.color = myColour
-        g.fillRect(5, 244, 510, 90)
+        g.fillRect(5, 250, 510, 90)
         g.color = myColour2
-        g.font = Font("Calibri", Font.BOLD, 35)
-        g.drawString("Beyond Bows V1.0", 140, 268)
-        g.drawString("________________", 140, 268)
-        g.font = Font("Calibri", Font.BOLD, 19)
+        g.font = Font("Calibri", Font.BOLD, 24)
+        g.drawString("Powagressive Open Source Fletcher", 20, 280)
+        g.font = Font("Calibri", Font.BOLD, 16)
         g.color = Color.yellow
-        g.drawString("| Bows Fletched: $amountCut", 10, 300)
+        g.drawString("| Bows Fletched: $amountCut", 280, 315)
         g.drawString("| Current Cut: " + bowType(), 10, 315)
         g.drawString("| Fletching Level: " + SKILLS.FLETCHING.actualLevel + " ("
-                + (SKILLS.FLETCHING.actualLevel - fletchingLevelBefore) + ")", 10, 330)
-        g.drawString("| Experience Gained: " + gainedXp(), 245, 300)
-        g.font = Font("Calibri", Font.BOLD, 12)
-        g.color = Color.WHITE
-        g.drawString("Time Elapsed: " + Timing.msToString(timeRan), 215, 284)
+                + (SKILLS.FLETCHING.actualLevel - fletchingLevelBefore) + ")", 10, 300)
+        g.drawString("| Experience Gained: " + gainedXp(), 280, 300)
+        g.drawString("| Time Elapsed: " + Timing.msToString(timeRan), 10, 330)
     }
 
     override fun run() {
@@ -135,6 +128,10 @@ class BeyondBowFletcher : Script(), Painting {
             else -> "Kansas"
         }
     }
+    private fun resetClicks() {
+        hasClickedLogs = false
+        hasClickedKnife = false
+    }
 
     private fun bankProcess() {
         println("Made it to line 132")
@@ -151,9 +148,9 @@ class BeyondBowFletcher : Script(), Painting {
                     println("HasClickedLogs line 144 = ")
                     println((hasClickedLogs))
                 }
-                else if ((!hasClickedKnife) && (Inventory.getCount(knife) < 1)) {
+                if ((!hasClickedKnife) && (Inventory.getCount(knife) < 1)) {
                     println("Made it to line 148")
-                    Banking.withdraw(1, knife)
+                    Banking.withdraw(1, "Knife")
                     hasClickedKnife = true
                     println("HasClickedLogs line 144 = ")
                     println(hasClickedKnife)
@@ -163,12 +160,14 @@ class BeyondBowFletcher : Script(), Painting {
         else if (!Banking.isBankLoaded()){
             println("Made it to line 151")
             Banking.close()
+            resetClicks()
         }
     }
 
     private fun cutting() {
         println("Made it to line 157")
         if (Inventory.getCount(logType()) >= 1 && Inventory.getCount(knife) >= 1) {
+            resetClicks()
             if (Banking.isBankLoaded()) {
                 println("Made it to line 160")
                 Banking.close()
@@ -215,6 +214,7 @@ class BeyondBowFletcher : Script(), Painting {
                         bowType() in rsInterfaceChildOption5.componentName -> rsInterfaceChildOption5.click()
                         else -> print("L214" + errorMessage())
                     }
+                    resetClicks()
                     sleep(1000)
                 }
             }
