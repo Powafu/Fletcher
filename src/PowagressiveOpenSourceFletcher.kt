@@ -99,7 +99,6 @@ class BeyondBowFletcher : Script(), Painting {
     }
 
     private fun bowType(): String {
-        println("Made it to line 101")
         return when (fLvl) {
             in 0..9 -> bowToFletch[0]
             in 10..19 -> bowToFletch[1]
@@ -117,7 +116,6 @@ class BeyondBowFletcher : Script(), Painting {
     }
 
     private fun logType(): String {
-        println("Made it to line 119")
         return when (fLvl) {
             in 0..19 -> log[0]
             in 20..29 -> log[1]
@@ -134,69 +132,50 @@ class BeyondBowFletcher : Script(), Painting {
     }
 
     private fun bankProcess() {
-        println("Made it to line 132")
         if (Inventory.getCount(logType()) < 1) {
             if (!Banking.isBankLoaded()) {
                 Banking.openBankBanker()
-                println("Made it to line 136")
             } else {
                 Banking.depositAllExcept(knife)
                 if ((!hasClickedLogs) && (Inventory.getCount(logType())) < 1) {
-                    println("Made it to line 139")
                     Banking.withdraw(27, logType())
                     hasClickedLogs = true
-                    println("HasClickedLogs line 144 = ")
-                    println((hasClickedLogs))
                 }
                 if ((!hasClickedKnife) && (Inventory.getCount(knife) < 1)) {
-                    println("Made it to line 148")
                     Banking.withdraw(1, "Knife")
                     hasClickedKnife = true
-                    println("HasClickedLogs line 144 = ")
-                    println(hasClickedKnife)
+
                 }
             }
         }
         else if (!Banking.isBankLoaded()){
-            println("Made it to line 151")
             Banking.close()
             resetClicks()
         }
     }
 
     private fun cutting() {
-        println("Made it to line 157")
         if (Inventory.getCount(logType()) >= 1 && Inventory.getCount(knife) >= 1) {
             resetClicks()
             if (Banking.isBankLoaded()) {
-                println("Made it to line 160")
                 Banking.close()
             }
             val myKnife = Inventory.find(knife)
-            println("Made it to line 164")
             val myLogType = Inventory.find(logType())
-            println("Made it to line 166")
-            println(Player.getAnimation().toString())
             if (Player.getAnimation() == -1) {
                 if (!hasClickedKnife) {
                     if (knifeA !in Game.getUptext()) {
                         myKnife[0].click("Use")
-                        println("Made it to line 171 - HasClickedKnife = ")
                         hasClickedKnife = true
                     }
                 }
                 if (!hasClickedLogs) {
                     if (knifeA in Game.getUptext()) {
-                        println("Made it to line 179")
                         val nxt: Int
                         val amt: Int = Inventory.getCount(logType())
                         nxt = (random() * (amt - 0)).toInt()
-                        println(amt)
-                        println(nxt)
-                        println(hasClickedLogs)
                         myLogType[nxt].click()
                         hasClickedLogs = true
-                        println(hasClickedLogs)
                     }
                 }
                 if (Interfaces.isInterfaceValid(270) && Interfaces.isInterfaceSubstantiated(270, 16)) {
@@ -205,14 +184,13 @@ class BeyondBowFletcher : Script(), Painting {
                     val rsInterfaceChildOption3 = Interfaces.get(270, 16)
                     val rsInterfaceChildOption4 = Interfaces.get(270, 17)
                     val rsInterfaceChildOption5 = Interfaces.get(270, 18)
-                    println("RSI")
                     when {
                         bowType() in rsInterfaceChildOption1.componentName -> rsInterfaceChildOption1.click()
                         bowType() in rsInterfaceChildOption2.componentName -> rsInterfaceChildOption2.click()
                         bowType() in rsInterfaceChildOption3.componentName -> rsInterfaceChildOption3.click()
                         bowType() in rsInterfaceChildOption4.componentName -> rsInterfaceChildOption4.click()
                         bowType() in rsInterfaceChildOption5.componentName -> rsInterfaceChildOption5.click()
-                        else -> print("L214" + errorMessage())
+                        else -> errorMessage()
                     }
                     resetClicks()
                     sleep(1000)
@@ -226,7 +204,6 @@ class BeyondBowFletcher : Script(), Painting {
     private fun errorMessage() {
         shouldRun = when {
             Inventory.getCount(logType()) < 1 -> {
-                println(logType() + " " + bowType())
                 println("No logs to fletch. Stopping script.")
                 false
             }
@@ -235,7 +212,7 @@ class BeyondBowFletcher : Script(), Painting {
                 false
             }
             else -> {
-                println("Unknown Error: check highest line number")
+                println("Unknown Error")
                 false
             }
         }
