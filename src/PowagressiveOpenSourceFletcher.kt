@@ -197,6 +197,7 @@ class BeyondBowFletcher : Script(), Painting {
                 }
             }
         }    else {
+                resetClicks()
                 bankProcess()
         }
     }
